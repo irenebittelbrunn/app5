@@ -1,138 +1,77 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue'
+const tarefas = ref([
+  { id: 1, desc: 'Prova Geografia', status: 'pendente' },
+  { id: 2, desc: 'Prova História', status: 'concluida' },
+  { id: 3, desc: 'Trabalho DevWeb', status: 'pendente' }
+]);
 
-let tarefas = ref([
-  { texto: 'Prova Matemática', concluida: false },
-  { texto: 'Prova Geografia', concluida: false },
-  { texto: 'Trabalho Sociologia', concluida: false }
-])
+const novaTarefa = ref('')
+const posicaoAlterar = ref(-1)
 
-let add = ref("")
-let aviso = ref(false)
-let filtro = ref("todas") // todas | pendentes | concluidas
-
-function adicionar() {
-  if (add.value.trim().length < 5) {
-    aviso.value = true
-    return
+function addTarefa() {
+  if (posicaoAlterar.value == -1) {
+    let maiorID = Math.max(...tarefas.value.map(item => item.id));
+    tarefas.value.push({
+      id: maiorID + 1,
+      desc: novaTarefa.value,
+      status: 'pendente'
+    });
   }
-
-  tarefas.value.push({
-    texto: add.value,
-    concluida: false
-  })
-
-  add.value = ""
-  aviso.value = false
+  else {
+    tarefas.value[posicaoAlterar.value].desc = novaTarefa.value
+    posicaoAlterar.value = -1
+  }
+  novaTarefa.value = '';
 }
 
-function editarTarefa(tarefa) {
-  const edicao = prompt(`Editando ${tarefa.texto}...`)
-  if (!edicao || edicao.length < 5) {
-    alert("Mínimo 5 caracteres")
-    return
-  }
-  tarefa.texto = edicao
+function deleteTarefa(item) {
+  const posicao = tarefas.value.findIndex(t => t.id === item.id);
+  tarefas.value.splice(posicao, 1);
 }
 
-function deleteTarefa(tarefa) {
-  tarefas.value = tarefas.value.filter(t => t !== tarefa)
+function editTarefa(item) {
+  posicaoAlterar.value = tarefas.value.findIndex(t => t.id === item.id);
+  novaTarefa.value = tarefas.value[posicaoAlterar.value].desc;
 }
-
-function toggleConcluida(tarefa) {
-  tarefa.concluida = !tarefa.concluida
+function marcarConcluida(id) {
+  const posicao =
+    tarefas.value.findIndex(t => t.id == id);
+  if (tarefas.value[posicao].status == 'concluida') {
+    tarefas.value[posicao].status = 'pendente'
+  }
+  else {
+    tarefas.value[posicao].status = 'concluida'
+  }
 }
-
-const tarefasFiltradas = computed(() => {
-  if (filtro.value === "pendentes") {
-    return tarefas.value.filter(t => !t.concluida)
-  }
-  if (filtro.value === "concluidas") {
-    return tarefas.value.filter(t => t.concluida)
-  }
-  return tarefas.value
-})
-
-const pendentes = computed(() =>
-  tarefas.value.filter(t => !t.concluida).length
-)
-
-const concluidas = computed(() =>
-  tarefas.value.filter(t => t.concluida).length
-)
 </script>
 
 <template>
   <div class="container">
-    <h1>Lista de Tarefas</h1>
-
-    <input v-model="add" @keyup.enter="adicionar" placeholder="Digite a tarefa">
-    <button @click="adicionar">Adicionar</button>
-    <p v-if="aviso">Mínimo 5 caracteres</p>
-
-    <br><br>
-
-    <select v-model="filtro">
-      <option value="todas">Todas</option>
-      <option value="pendentes">Pendentes</option>
-      <option value="concluidas">Concluídas</option>
-    </select>
-
+    <input type="text" v-model="novaTarefa">
+    <button @click="addTarefa">Adicionar</button>
     <ul>
-      <li v-for="tarefa in tarefasFiltradas" :key="tarefa.texto">
-        <input type="checkbox" v-model="tarefa.concluida">
-
-        <span :style="{ textDecoration: tarefa.concluida ? 'line-through' : 'none' }">
-          {{ tarefa.texto }}
+      <li v-for="item in tarefas"
+        :key="item.id"
+        @click="marcarConcluida(item.id)"
+        :class="{ concluida: item.status == 'concluida'}"
+      >
+        <span class="lista">{{ item.desc }}</span>
+        <span>
+          <a href="#" @click.prevent="deleteTarefa(item)">Delete</a>
+          <a href="#" @click.prevent="editTarefa(item)">Edit</a>
         </span>
-
-        <button @click="editarTarefa(tarefa)">E</button>
-        <button @click="deleteTarefa(tarefa)">D</button>
       </li>
     </ul>
-
-    <p>Pendentes: {{ pendentes }}</p>
-    <p>Concluídas: {{ concluidas }}</p>
-
-    <button @click="tarefas.sort((a,b) => a.texto.localeCompare(b.texto))">
-      Ordenar
-    </button>
   </div>
 </template>
-<style>
-input {
-  background-color: brown;
-  border: none;
-  font-size: 2rem;
-  border-radius: 50px;
-  color: white;
-}
-button {
-  background-color: brown;
-  border: none;
-  border-radius: 50px;
-  font-size: 1.5rem;
-  margin: 1vw;
-}
-h1 {
-  font-size: 3rem;
-}
-ul {
-  font-size: 1.5rem;
-}
-option{
-  font-size: 1.5rem;
-  background-color: brown;
-  color: white;
-}
-p{
-  font-size: 1.5rem;
-}
-.select{
-  font-size: 1.5rem;
-  background-color: brown;
-  color: white;
-  border-radius: 50px;
+<style scoped>
+li {
+  cursor: pointer;
 }
 
+.concluida .lista{
+  text-decoration: line-through;
+}
 </style>
+
