@@ -1,68 +1,44 @@
 <script setup>
-import { ref } from 'vue'
-const tarefas = ref([
-  { id: 1, desc: 'Prova Geografia', status: 'pendente' },
-  { id: 2, desc: 'Prova História', status: 'concluida' },
-  { id: 3, desc: 'Trabalho DevWeb', status: 'pendente' }
-]);
+import {ref} from 'vue'
+import ProdutoChild from './components/ProdutoChild.vue';
+import ButtonChild from './componentes/ButtonChild.vue';
+const produtos = ref([
+{ id: 1, nome: 'Ração Premium Cães', preco: 120, categoria: 'Alimentos' },
+{ id: 2, nome: 'Ração Gatos Castrados', preco: 95, categoria: 'Alimentos' },
+{ id: 3, nome: 'Petisco Natural', preco: 18, categoria: 'Alimentos' },
+{ id: 4, nome: 'Brinquedo Bola', preco: 22, categoria: 'Brinquedos' },
+{ id: 5, nome: 'Mordedor de Corda', preco: 30, categoria: 'Brinquedos' },
+{ id: 6, nome: 'Shampoo Pet', preco: 35, categoria: 'Higiene' },
+{ id: 7, nome: 'Tapete Higiênico', preco: 42, categoria: 'Higiene' },
+{ id: 8, nome: 'Coleira Azul', preco: 28, categoria: 'Acessórios' },
+{ id: 9, nome: 'Guia de Passeio', preco: 40, categoria: 'Acessórios' }
+])
+const preco = ref(0);
+const posicaoProduto = ref(-9);
 
-const novaTarefa = ref('')
-const posicaoAlterar = ref(-1)
-
-function addTarefa() {
-  if (posicaoAlterar.value == -1) {
-    let maiorID = Math.max(...tarefas.value.map(item => item.id));
-    tarefas.value.push({
-      id: maiorID + 1,
-      desc: novaTarefa.value,
-      status: 'pendente'
-    });
-  }
-  else {
-    tarefas.value[posicaoAlterar.value].desc = novaTarefa.value
-    posicaoAlterar.value = -1
-  }
-  novaTarefa.value = '';
+function corrigirPreco(idProduto) {
+  posicaoProduto.value = produtos.value.findIndex(p => p.id === idProduto);
+  preco.value = produtos.value[posicaoProduto.value].preco;
+  alterando.value = true;
 }
 
-function deleteTarefa(item) {
-  const posicao = tarefas.value.findIndex(t => t.id === item.id);
-  tarefas.value.splice(posicao, 1);
-}
-
-function editTarefa(item) {
-  posicaoAlterar.value = tarefas.value.findIndex(t => t.id === item.id);
-  novaTarefa.value = tarefas.value[posicaoAlterar.value].desc;
-}
-function marcarConcluida(id) {
-  const posicao =
-    tarefas.value.findIndex(t => t.id == id);
-  if (tarefas.value[posicao].status == 'concluida') {
-    tarefas.value[posicao].status = 'pendente'
-  }
-  else {
-    tarefas.value[posicao].status = 'concluida'
-  }
+function salvarPreco(){
+  produtos.value[posicaoProduto.value].preco = preco.value;
+  alterando.value = false;
 }
 </script>
 
 <template>
   <div class="container">
-    <input type="text" v-model="novaTarefa">
-    <button @click="addTarefa">Adicionar</button>
     <ul>
-      <li v-for="item in tarefas"
-        :key="item.id"
-        @click="marcarConcluida(item.id)"
-        :class="{ concluida: item.status == 'concluida'}"
-      >
-        <span class="lista">{{ item.desc }}</span>
-        <span>
-          <a href="#" @click.prevent="deleteTarefa(item)">Delete</a>
-          <a href="#" @click.prevent="editTarefa(item)">Edit</a>
-        </span>
-      </li>
+    <ProdutoChild v-for="produto in produtos" :key="produto.id" :id="produto.id" :nome="produto.nome" :preco="produto.preco" :categoria="produto.categoria" @corrigirpreco="corrigirpreco"> </ProdutoChild>
     </ul>
+    <div v-show="true">
+      <label>Preço</label>
+      <input type="number" v-model.number="preco">
+      <ButtonChild>Salvar</ButtonChild>
+    </div>
+
   </div>
 </template>
 <style scoped>
